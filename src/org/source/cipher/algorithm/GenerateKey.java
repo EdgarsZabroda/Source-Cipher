@@ -1,7 +1,8 @@
 package org.source.cipher.algorithm;
 
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Random;
 
 public class GenerateKey
@@ -18,9 +19,11 @@ public class GenerateKey
 	public void Generate(boolean bSingle) throws IOException
 	{
 		short sBytes = this.sBytes;
-		FileOutputStream fosKey = new FileOutputStream(this.sFile);
+		File KeyFile = new File(this.sFile);
+		RandomAccessFile rafKey = new RandomAccessFile(KeyFile, "rw");
 		byte bySingle;
 		byte Key[];
+		byte bShortToByte[] = new byte[sBytes*2];;
 		Random Picker = new Random();
 		byte capitals[] = { 'A', 'B', 'C', 'D', 'E', 'F',
 				'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
@@ -37,24 +40,23 @@ public class GenerateKey
 				'}', ':', '"', '<', '>', '?', '`', '-', '=',
 				'\\', '[', ']', ';', '\'', ',', '.', '/',
 				'\r', '\n', '\t'};
+		byte bKeyFile[];
 		
 		if(bSingle == true)
 		{
 			bySingle = 0x01;
+			bKeyFile = new byte[1+2+sBytes];
 		}
 		else
 		{
 			bySingle = 0x00;
+			bKeyFile = new byte[1+2+sBytes+(sBytes*2)];
 		}
-		
-		fosKey.write(bySingle);
 		
 		byte bBytes[] = new byte[2];
 		
 		bBytes[0] = (byte)(sBytes & 0xFF);
 		bBytes[1] = (byte)((sBytes >> 8) & 0xFF);
-		
-		fosKey.write(bBytes);
 		
 		Key = new byte[sBytes];
 		
@@ -79,8 +81,6 @@ public class GenerateKey
 			}
 		}
 		
-		fosKey.write(Key);
-		
 		if(bSingle == false)
 		{
 			short sOffset[] = new short[Key.length];
@@ -99,16 +99,36 @@ public class GenerateKey
 				}
 			}
 			
-			for(int x=0;x<Key.length;x++)
+			for(int x=0;x<Key.length*2;x+=2)
 			{
-				byte bShortToByte[] = new byte[2];
-				bShortToByte[0] = (byte)(sOffset[x] & 0xFF);
-				bShortToByte[1] = (byte)((sOffset[x] >> 8));
-				
-				fosKey.write(bShortToByte);
+				bShortToByte[x] = (byte)(sOffset[x] & 0xFF);
+				bShortToByte[x+1] = (byte)((sOffset[x] >> 8));
 			}
 		}
 		
-		fosKey.close();
+		StringBuilder sbKeyFile = new StringBuilder();
+		
+		sbKeyFile.append(bySingle);
+		sbKeyFile.append(bBytes[0]);
+		sbKeyFile.append(bBytes[1]);
+		
+		for(byte bKeyPart : Key)
+		{
+			sbKeyFile.append(bKeyPart);
+		}
+		
+		if(bSingle == false)
+		{
+			for(byte bKeyPart : bShortToByte)
+			{
+				sbKeyFile.append(bKeyPart);
+			}
+		}
+		
+		String sResult = sbKeyFile.toString();
+		bKeyFile = sResult.getBytes();
+		
+		rafKey.write(bKeyFile);
+		rafKey.close();
 	}
 }
