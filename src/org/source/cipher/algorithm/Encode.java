@@ -23,7 +23,7 @@ public class Encode
 		this.jlProgress = null;
 	}
 	
-	void Commit(String sFile) throws IOException
+	public void Commit(String sFile) throws IOException
 	{
 		byte bSingle[] = new byte[1];
 		byte bSplittedByteInfo[];
@@ -223,7 +223,7 @@ public class Encode
 		rafTargetFile.close();
 	}
 	
-	void Commit(String sFile, boolean bFitToRAM) throws IOException
+	public void Commit(String sFile, boolean bFitToRAM) throws IOException
 	{
 		byte bSingle[] = new byte[1];
 		byte bSplittedByteInfo[];
