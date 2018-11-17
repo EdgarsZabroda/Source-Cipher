@@ -82,8 +82,7 @@ public class Encode
 						}
 					}
 					
-					rafTargetFile.seek(nOffset);
-					rafTargetFile.write(bChunk, nOffset, sBytes);
+					rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
 					
 					nOffset += sBytes*1024*1024;
 					nRemaining -= sBytes*1024*1024;
@@ -114,7 +113,7 @@ public class Encode
 						}
 					}
 					
-					rafTargetFile.write(bChunk, nOffset, sBytes);
+					rafTargetFile.write(bChunk, nOffset, nRemaining);
 					
 					nRemaining = 0;
 				}
@@ -138,7 +137,7 @@ public class Encode
 			
 			for(int x=0;x<sBytes;x++)
 			{
-				sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex]);
+				sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
 				sMergeToShortIndex += 2;
 			}
 			
@@ -177,8 +176,7 @@ public class Encode
 						}
 					}
 					
-					rafTargetFile.seek(nOffset);
-					rafTargetFile.write(bChunk);
+					rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
 					
 					nOffset += sBytes*1024*1024;
 					nRemaining -= sBytes*1024*1024;
@@ -210,8 +208,7 @@ public class Encode
 						}
 					}
 					
-					rafTargetFile.seek(nOffset);
-					rafTargetFile.write(bChunk);
+					rafTargetFile.write(bChunk, nOffset, nRemaining);
 					
 					nRemaining = 0;
 				}
@@ -283,8 +280,7 @@ public class Encode
 							}
 						}
 						
-						rafTargetFile.seek(nOffset);
-						rafTargetFile.write(bChunk);
+						rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
 						
 						nOffset += sBytes*1024*1024;
 						nRemaining -= sBytes*1024*1024;
@@ -315,8 +311,7 @@ public class Encode
 							}
 						}
 						
-						rafTargetFile.seek(nOffset);
-						rafTargetFile.write(bChunk);
+						rafTargetFile.write(bChunk, nOffset, nRemaining);
 						
 						nRemaining = 0;
 					}
@@ -382,7 +377,7 @@ public class Encode
 				
 				for(int x=0;x<sBytes;x++)
 				{
-					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex]);
+					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
 					sMergeToShortIndex += 2;
 				}
 				
@@ -421,8 +416,7 @@ public class Encode
 							}
 						}
 						
-						rafTargetFile.seek(nOffset);
-						rafTargetFile.write(bChunk);
+						rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
 						
 						nOffset += sBytes*1024*1024;
 						nRemaining -= sBytes*1024*1024;
@@ -454,8 +448,7 @@ public class Encode
 							}
 						}
 						
-						rafTargetFile.seek(nOffset);
-						rafTargetFile.write(bChunk);
+						rafTargetFile.write(bChunk, nOffset, nRemaining);
 						
 						nRemaining = 0;
 					}
@@ -479,7 +472,7 @@ public class Encode
 				
 				for(int x=0;x<sBytes;x++)
 				{
-					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex]);
+					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
 					sMergeToShortIndex += 2;
 				}
 				
