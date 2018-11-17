@@ -83,7 +83,7 @@ public class Encode
 					}
 					
 					rafTargetFile.seek(nOffset);
-					rafTargetFile.write(bChunk);
+					rafTargetFile.write(bChunk, nOffset, sBytes);
 					
 					nOffset += sBytes*1024*1024;
 					nRemaining -= sBytes*1024*1024;
@@ -114,8 +114,7 @@ public class Encode
 						}
 					}
 					
-					rafTargetFile.seek(nOffset);
-					rafTargetFile.write(bChunk);
+					rafTargetFile.write(bChunk, nOffset, sBytes);
 					
 					nRemaining = 0;
 				}
