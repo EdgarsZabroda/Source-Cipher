@@ -1,6 +1,7 @@
 package org.source.cipher.algorithm;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
@@ -16,12 +17,12 @@ public class GenerateKey
 		this.sBytes = sBytes;
 	}
 	
-	public void Generate(boolean bSingle) throws IOException
+	public final boolean Generate(boolean bSingle) throws FileNotFoundException, IOException
 	{
+		boolean bComplete = false;
 		short sBytes = this.sBytes;
 		File KeyFile = new File(this.sFile);
-		RandomAccessFile rafKey = new RandomAccessFile(KeyFile, "rw");
-		byte bySingle;
+		byte bySingle[] = new byte[1];
 		byte Key[];
 		byte bShortToByte[] = new byte[sBytes*2];;
 		Random Picker = new Random();
@@ -40,17 +41,26 @@ public class GenerateKey
 				'}', ':', '"', '<', '>', '?', '`', '-', '=',
 				'\\', '[', ']', ';', '\'', ',', '.', '/',
 				'\r', '\n', '\t', ' '};
-		byte bKeyFile[];
+		
+		if(KeyFile.exists() == true)
+		{
+			if(KeyFile.delete() == false)
+			{
+				System.out.println("Failed to delete the file '"
+						+ KeyFile.getAbsolutePath() + "\\"
+						+ KeyFile.getName() + "'");
+			}
+		}
+		
+		RandomAccessFile rafKey = new RandomAccessFile(KeyFile, "rw");
 		
 		if(bSingle == true)
 		{
-			bySingle = 0x01;
-			bKeyFile = new byte[1+2+sBytes];
+			bySingle[0] = 0x01;
 		}
 		else
 		{
-			bySingle = 0x00;
-			bKeyFile = new byte[1+2+sBytes+(sBytes*2)];
+			bySingle[0] = 0x00;
 		}
 		
 		byte bBytes[] = new byte[2];
@@ -81,6 +91,13 @@ public class GenerateKey
 			}
 		}
 		
+		rafKey.seek(0);
+		rafKey.write(bySingle, 0, 1);
+		rafKey.seek(1);
+		rafKey.write(bBytes, 0, 2);
+		rafKey.seek(3);
+		rafKey.write(Key, 0, sBytes);
+		
 		if(bSingle == false)
 		{
 			short sOffset[] = new short[Key.length];
@@ -99,36 +116,26 @@ public class GenerateKey
 				}
 			}
 			
-			for(int x=0;x<Key.length*2;x+=2)
+			int nIndex = 0;
+			
+			for(int x=0;x<(sBytes*2);x+=2)
 			{
-				bShortToByte[x] = (byte)(sOffset[x] & 0xFF);
-				bShortToByte[x+1] = (byte)((sOffset[x] >> 8));
+				bShortToByte[x] = (byte)(sOffset[nIndex] & 0xFF);
+				bShortToByte[x+1] = (byte)((sOffset[nIndex] >> 8));
+				nIndex++;
 			}
+			
+			rafKey.seek(3+sBytes);
+			rafKey.write(bShortToByte, 0, sBytes*2);
+			bComplete = true;
 		}
-		
-		StringBuilder sbKeyFile = new StringBuilder();
-		
-		sbKeyFile.append(bySingle);
-		sbKeyFile.append(bBytes[0]);
-		sbKeyFile.append(bBytes[1]);
-		
-		for(byte bKeyPart : Key)
+		else
 		{
-			sbKeyFile.append(bKeyPart);
+			bComplete = true;
 		}
 		
-		if(bSingle == false)
-		{
-			for(byte bKeyPart : bShortToByte)
-			{
-				sbKeyFile.append(bKeyPart);
-			}
-		}
-		
-		String sResult = sbKeyFile.toString();
-		bKeyFile = sResult.getBytes();
-		
-		rafKey.write(bKeyFile);
 		rafKey.close();
+		
+		return bComplete;
 	}
 }

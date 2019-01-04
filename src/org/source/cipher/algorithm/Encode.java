@@ -1,17 +1,18 @@
 package org.source.cipher.algorithm;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 
 public class Encode
 {
 	private String sKey;
-	private JLabel jlProgress;
+	private JProgressBar jlProgress;
 	
-	public Encode(String sKey, JLabel jlProgress)
+	public Encode(String sKey, JProgressBar jlProgress)
 	{
 		this.sKey = sKey;
 		this.jlProgress = jlProgress;
@@ -23,8 +24,9 @@ public class Encode
 		this.jlProgress = null;
 	}
 	
-	public void Commit(String sFile) throws IOException
+	public final boolean Commit(String sFile, boolean bFitToRAM) throws FileNotFoundException, IOException 
 	{
+		boolean bComplete = false;
 		byte bSingle[] = new byte[1];
 		byte bSplittedByteInfo[];
 		short sBytes;
@@ -36,202 +38,7 @@ public class Encode
 		RandomAccessFile rafKey = new RandomAccessFile(KeyFile, "r");
 		RandomAccessFile rafTargetFile = new RandomAccessFile(TargetFile, "rw");
 		
-		rafKey.read(bSingle, 0, 1);
-		
-		if(bSingle[0] == 1)
-		{
-			bSplittedByteInfo = new byte[2];
-			rafKey.read(bSplittedByteInfo, 1, 2);
-			
-			sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
-			Key = new byte[sBytes];
-			
-			rafKey.read(Key, 3, (int)sBytes);
-			
-			int nOffset = 0;
-			int nDone = 0;
-			int nRemaining = (int)TargetFile.length();
-			int nSize = (int)TargetFile.length();
-			byte bChunk[] = new byte[sBytes*1024*1024];
-			
-			while(nRemaining != 0)
-			{	
-				if(nRemaining >= (sBytes*1024*1024))
-				{
-					rafTargetFile.read(bChunk, nOffset, (sBytes*1024*1024));
-					short sKeyOffset = 0;
-					
-					for(int x=0;x<bChunk.length;x++)
-					{
-						if(sKeyOffset == sBytes)
-						{
-							sKeyOffset = 0;
-						}
-						
-						bChunk[x] ^= Key[sKeyOffset];
-						
-						sKeyOffset++;
-						
-						if(jlProgress != null && sKeyOffset == sBytes)
-						{
-							nDone += sBytes;
-							String sDone = Integer.toString(nDone);
-							String sAll = Integer.toString(nSize);
-							this.jlProgress.setText("Processing " +
-									sDone + "/" + sAll);
-						}
-					}
-					
-					rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
-					
-					nOffset += sBytes*1024*1024;
-					nRemaining -= sBytes*1024*1024;
-				}
-				else
-				{
-					rafTargetFile.read(bChunk, nOffset, nRemaining);
-					short sKeyOffset = 0;
-					
-					for(int x=0;x<nRemaining;x++)
-					{
-						if(sKeyOffset == sBytes)
-						{
-							sKeyOffset = 0;
-						}
-						
-						bChunk[x] ^= Key[sKeyOffset];
-						
-						sKeyOffset++;
-						
-						if(jlProgress != null && sKeyOffset == sBytes)
-						{
-							nDone += sBytes;
-							String sDone = Integer.toString(nDone);
-							String sAll = Integer.toString(nSize);
-							this.jlProgress.setText("Processing " +
-									sDone + "/" + sAll);
-						}
-					}
-					
-					rafTargetFile.write(bChunk, nOffset, nRemaining);
-					
-					nRemaining = 0;
-				}
-			}
-		}
-		else
-		{
-			bSplittedByteInfo = new byte[2];
-			rafKey.read(bSplittedByteInfo, 1, 2);
-			
-			sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
-			Key = new byte[sBytes];
-			bSplittedByteShuffledKey = new byte[sBytes * 2];
-			sShuffledOffsets = new short[sBytes];
-			
-			
-			rafKey.read(Key, 3, sBytes);
-			rafKey.read(bSplittedByteShuffledKey, (3+sBytes), (sBytes*2));
-			
-			short sMergeToShortIndex = 0;
-			
-			for(int x=0;x<sBytes;x++)
-			{
-				sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
-				sMergeToShortIndex += 2;
-			}
-			
-			int nOffset = 0;
-			int nDone = 0;
-			int nRemaining = (int)TargetFile.length();
-			int nTotal = (int)TargetFile.length();
-			byte bChunk[] = new byte[sBytes*1024*1024];
-			
-			while(nRemaining != 0)
-			{
-				if(nRemaining >= (sBytes*1024*1024))
-				{
-					rafTargetFile.read(bChunk, nOffset, (sBytes*1024*1024));
-					short sKeyIndex = 0;
-					
-					for(int x=0;x<bChunk.length;x++)
-					{
-						if(sKeyIndex == sBytes)
-						{
-							sKeyIndex = 0;
-						}
-						
-						bChunk[x] ^= Key[sKeyIndex];
-						bChunk[x] ^= Key[sShuffledOffsets[sKeyIndex]];
-						
-						sKeyIndex++;
-						
-						if(this.jlProgress != null && sKeyIndex == sBytes)
-						{
-							nDone += sBytes;
-							String sDone = Integer.toString(nDone);
-							String sAll = Integer.toString(nTotal);
-							this.jlProgress.setText("Processing " +
-									sDone + "/" + sAll);
-						}
-					}
-					
-					rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
-					
-					nOffset += sBytes*1024*1024;
-					nRemaining -= sBytes*1024*1024;
-				}
-				else
-				{
-					rafTargetFile.read(bChunk, nOffset, nRemaining);
-					short sKeyIndex = 0;
-					
-					for(int x=0;x<nRemaining;x++)
-					{
-						if(sKeyIndex == sBytes)
-						{
-							sKeyIndex = 0;
-						}
-						
-						bChunk[x] ^= Key[sKeyIndex];
-						bChunk[x] ^= Key[sShuffledOffsets[sKeyIndex]];
-						
-						sKeyIndex++;
-						
-						if(this.jlProgress != null && sKeyIndex == sBytes)
-						{
-							nDone += sBytes;
-							String sDone = Integer.toString(nDone);
-							String sAll = Integer.toString(nTotal);
-							this.jlProgress.setText("Processing " +
-									sDone + "/" + sAll);
-						}
-					}
-					
-					rafTargetFile.write(bChunk, nOffset, nRemaining);
-					
-					nRemaining = 0;
-				}
-			}
-		}
-		
-		rafKey.close();
-		rafTargetFile.close();
-	}
-	
-	public void Commit(String sFile, boolean bFitToRAM) throws IOException
-	{
-		byte bSingle[] = new byte[1];
-		byte bSplittedByteInfo[];
-		short sBytes;
-		byte Key[];
-		byte bSplittedByteShuffledKey[];
-		short sShuffledOffsets[];
-		File KeyFile = new File(this.sKey);
-		File TargetFile = new File(sFile);
-		RandomAccessFile rafKey = new RandomAccessFile(KeyFile, "r");
-		RandomAccessFile rafTargetFile = new RandomAccessFile(TargetFile, "rw");
-		
+		rafKey.seek(0);
 		rafKey.read(bSingle, 0, 1);
 		
 		if(bSingle[0] == 1)
@@ -239,24 +46,30 @@ public class Encode
 			if(bFitToRAM == false)
 			{
 				bSplittedByteInfo = new byte[2];
-				rafKey.read(bSplittedByteInfo, 1, 2);
+				rafKey.seek(1);
+				rafKey.read(bSplittedByteInfo, 0, 2);
 				
-				sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
+				sBytes = (short)(((bSplittedByteInfo[1])<<8) | bSplittedByteInfo[0] & 0x00FF);
 				Key = new byte[sBytes];
 				
-				rafKey.read(Key, 3, (int)sBytes);
+				rafKey.seek(3);
+				rafKey.read(Key, 0, sBytes);
 				
-				int nOffset = 0;
-				int nDone = 0;
-				int nRemaining = (int)TargetFile.length();
-				int nSize = (int)TargetFile.length();
+				long nOffset = 0;
+				long nDone = 0;
+				long nRemaining = TargetFile.length();
+				long nSize = TargetFile.length();
 				byte bChunk[] = new byte[sBytes*1024*1024];
+				long nTargetBytesInCurrentPercent = nSize / 100;
+				final long nOnePercent = nSize / 100;
+				int nCurrentPercent = 0;
 				
 				while(nRemaining != 0)
 				{	
 					if(nRemaining >= (sBytes*1024*1024))
 					{
-						rafTargetFile.read(bChunk, nOffset, (sBytes*1024*1024));
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.read(bChunk, 0, (sBytes*1024*1024));
 						short sKeyOffset = 0;
 						
 						for(int x=0;x<bChunk.length;x++)
@@ -270,24 +83,38 @@ public class Encode
 							
 							sKeyOffset++;
 							
-							if(jlProgress != null && sKeyOffset == sBytes)
+							if(jlProgress != null)
 							{
-								nDone += sBytes;
-								String sDone = Integer.toString(nDone);
-								String sAll = Integer.toString(nSize);
-								this.jlProgress.setText("Processing " +
-										sDone + "/" + sAll);
+								nDone++;
+								
+								if(nDone == nTargetBytesInCurrentPercent)
+								{
+									nCurrentPercent++;
+									this.jlProgress.setValue(nCurrentPercent);
+									nTargetBytesInCurrentPercent += nOnePercent;
+									
+									if(nTargetBytesInCurrentPercent >= nSize)
+									{
+										nTargetBytesInCurrentPercent = nSize;
+									}
+									else if(nTargetBytesInCurrentPercent < nSize && nCurrentPercent == 99)
+									{
+										nTargetBytesInCurrentPercent = nSize;
+									}
+								}
 							}
 						}
 						
-						rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.write(bChunk, 0, (sBytes*1024*1024));
 						
 						nOffset += sBytes*1024*1024;
 						nRemaining -= sBytes*1024*1024;
 					}
 					else
 					{
-						rafTargetFile.read(bChunk, nOffset, nRemaining);
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.read(bChunk, 0, (int)nRemaining);
 						short sKeyOffset = 0;
 						
 						for(int x=0;x<nRemaining;x++)
@@ -301,35 +128,56 @@ public class Encode
 							
 							sKeyOffset++;
 							
-							if(jlProgress != null && sKeyOffset == sBytes)
+							if(jlProgress != null)
 							{
-								nDone += sBytes;
-								String sDone = Integer.toString(nDone);
-								String sAll = Integer.toString(nSize);
-								this.jlProgress.setText("Processing " +
-										sDone + "/" + sAll);
+								nDone++;
+								
+								if(nDone == nTargetBytesInCurrentPercent)
+								{
+									nCurrentPercent++;
+									this.jlProgress.setValue(nCurrentPercent);
+									nTargetBytesInCurrentPercent += nOnePercent;
+									
+									if(nTargetBytesInCurrentPercent >= nSize)
+									{
+										nTargetBytesInCurrentPercent = nSize;
+									}
+									else if(nTargetBytesInCurrentPercent < nSize && nCurrentPercent == 99)
+									{
+										nTargetBytesInCurrentPercent = nSize;
+									}
+								}
 							}
 						}
 						
-						rafTargetFile.write(bChunk, nOffset, nRemaining);
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.write(bChunk, 0, (int)nRemaining);
 						
 						nRemaining = 0;
 					}
+					
+					bComplete = true;
 				}
 			}
 			else
 			{
 				byte bChunk[] = new byte[(int)TargetFile.length()];
-				int nDone = 0;
-				int nTotal = (int)TargetFile.length();
+				long nDone = 0;
+				long nTotal = TargetFile.length();
 				bSplittedByteInfo = new byte[2];
-				rafKey.read(bSplittedByteInfo, 1, 2);
+				rafKey.seek(1);
+				rafKey.read(bSplittedByteInfo, 0, 2);
+				long nTargetBytesInCurrentPercent = nTotal / 100;
+				final long nOnePercent = nTotal / 100;
+				int nCurrentPercent = 0;
 				
-				sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
+				sBytes = (short)(((bSplittedByteInfo[1])<<8) | bSplittedByteInfo[0] & 0x00FF);
 				Key = new byte[sBytes];
 				
-				rafKey.read(Key, 3, (int)sBytes);
-				rafTargetFile.read(bChunk);
+				rafKey.seek(3);
+				rafKey.read(Key, 0, sBytes);
+				rafTargetFile.seek(0);
+				rafTargetFile.read(bChunk, 0, (int)TargetFile.length());
 				
 				short sKeyIndex = 0;
 				
@@ -337,24 +185,38 @@ public class Encode
 				{
 					if(sKeyIndex == sBytes)
 					{
-						sBytes = 0;
+						sKeyIndex = 0;
 					}
 					
 					bChunk[x] ^= Key[sKeyIndex];
 					
 					sKeyIndex++;
 					
-					if(this.jlProgress != null && sKeyIndex == sBytes)
+					if(this.jlProgress != null)
 					{
-						nDone += sBytes;
-						String sDone = Integer.toString(nDone);
-						String sTotal = Integer.toString(nTotal);
-						this.jlProgress.setText("Processing " + sDone
-								+ "/" + sTotal);
+						nDone++;
+						
+						if(nDone == nTargetBytesInCurrentPercent)
+						{
+							nCurrentPercent++;
+							this.jlProgress.setValue(nCurrentPercent);
+							nTargetBytesInCurrentPercent += nOnePercent;
+							
+							if(nTargetBytesInCurrentPercent >= nTotal)
+							{
+								nTargetBytesInCurrentPercent = nTotal;
+							}
+							else if(nTargetBytesInCurrentPercent < nTotal && nCurrentPercent == 99)
+							{
+								nTargetBytesInCurrentPercent = nTotal;
+							}
+						}
 					}
 				}
 				
+				rafTargetFile.seek(0);
 				rafTargetFile.write(bChunk);
+				bComplete = true;
 			}
 		}
 		else
@@ -362,36 +224,43 @@ public class Encode
 			if(bFitToRAM == false)
 			{
 				bSplittedByteInfo = new byte[2];
-				rafKey.read(bSplittedByteInfo, 1, 2);
+				rafKey.seek(1);
+				rafKey.read(bSplittedByteInfo, 0, 2);
 				
-				sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
+				sBytes = (short)(((bSplittedByteInfo[1])<<8) | bSplittedByteInfo[0] & 0x00FF);
 				Key = new byte[sBytes];
 				bSplittedByteShuffledKey = new byte[sBytes * 2];
 				sShuffledOffsets = new short[sBytes];
 				
 				
-				rafKey.read(Key, 3, sBytes);
-				rafKey.read(bSplittedByteShuffledKey, (3+sBytes), (sBytes*2));
+				rafKey.seek(3);
+				rafKey.read(Key, 0, sBytes);
+				rafKey.seek(3+sBytes);
+				rafKey.read(bSplittedByteShuffledKey, 0, (sBytes*2));
 				
 				short sMergeToShortIndex = 0;
 				
 				for(int x=0;x<sBytes;x++)
 				{
-					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
+					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex+1]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex]);
 					sMergeToShortIndex += 2;
 				}
 				
-				int nOffset = 0;
-				int nDone = 0;
-				int nRemaining = (int)TargetFile.length();
-				int nTotal = (int)TargetFile.length();
+				long nOffset = 0;
+				long nDone = 0;
+				long nRemaining = TargetFile.length();
+				long nTotal = TargetFile.length();
 				byte bChunk[] = new byte[sBytes*1024*1024];
+				long nTargetBytesInCurrentPercent = nTotal / 100;
+				final long nOnePercent = nTotal / 100;
+				int nCurrentPercent = 0;
 				
 				while(nRemaining != 0)
 				{
 					if(nRemaining >= (sBytes*1024*1024))
 					{
-						rafTargetFile.read(bChunk, nOffset, (sBytes*1024*1024));
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.read(bChunk, 0, (sBytes*1024*1024));
 						short sKeyIndex = 0;
 						
 						for(int x=0;x<bChunk.length;x++)
@@ -406,24 +275,38 @@ public class Encode
 							
 							sKeyIndex++;
 							
-							if(this.jlProgress != null && sKeyIndex == sBytes)
+							if(this.jlProgress != null)
 							{
-								nDone += sBytes;
-								String sDone = Integer.toString(nDone);
-								String sAll = Integer.toString(nTotal);
-								this.jlProgress.setText("Processing " +
-										sDone + "/" + sAll);
+								nDone++;
+								
+								if(nDone == nTargetBytesInCurrentPercent)
+								{
+									nCurrentPercent++;
+									this.jlProgress.setValue(nCurrentPercent);
+									nTargetBytesInCurrentPercent += nOnePercent;
+									
+									if(nTargetBytesInCurrentPercent >= nTotal)
+									{
+										nTargetBytesInCurrentPercent = nTotal;
+									}
+									else if(nTargetBytesInCurrentPercent < nTotal && nCurrentPercent == 99)
+									{
+										nTargetBytesInCurrentPercent = nTotal;
+									}
+								}
 							}
 						}
 						
-						rafTargetFile.write(bChunk, nOffset, (sBytes*1024*1024));
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.write(bChunk, 0, (sBytes*1024*1024));
 						
 						nOffset += sBytes*1024*1024;
 						nRemaining -= sBytes*1024*1024;
 					}
 					else
 					{
-						rafTargetFile.read(bChunk, nOffset, nRemaining);
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.read(bChunk, 0, (int)nRemaining);
 						short sKeyIndex = 0;
 						
 						for(int x=0;x<nRemaining;x++)
@@ -438,48 +321,70 @@ public class Encode
 							
 							sKeyIndex++;
 							
-							if(this.jlProgress != null && sKeyIndex == sBytes)
+							if(this.jlProgress != null)
 							{
-								nDone += sBytes;
-								String sDone = Integer.toString(nDone);
-								String sAll = Integer.toString(nTotal);
-								this.jlProgress.setText("Processing " +
-										sDone + "/" + sAll);
+								nDone++;
+								
+								if(nDone == nTargetBytesInCurrentPercent)
+								{
+									nCurrentPercent++;
+									this.jlProgress.setValue(nCurrentPercent);
+									nTargetBytesInCurrentPercent += nOnePercent;
+									
+									if(nTargetBytesInCurrentPercent >= nTotal)
+									{
+										nTargetBytesInCurrentPercent = nTotal;
+									}
+									else if(nTargetBytesInCurrentPercent < nTotal && nCurrentPercent == 99)
+									{
+										nTargetBytesInCurrentPercent = nTotal;
+									}
+								}
 							}
 						}
 						
-						rafTargetFile.write(bChunk, nOffset, nRemaining);
+						rafTargetFile.seek(nOffset);
+						rafTargetFile.write(bChunk, 0, (int)nRemaining);
 						
 						nRemaining = 0;
 					}
 				}
+				
+				bComplete = true;
 			}
 			else
 			{
 				bSplittedByteInfo = new byte[2];
-				rafKey.read(bSplittedByteInfo, 1, 2);
+				rafKey.seek(1);
+				rafKey.read(bSplittedByteInfo, 0, 2);
 				
-				sBytes = (short)(((bSplittedByteInfo[0])<<8) | bSplittedByteInfo[1] & 0x00FF);
+				sBytes = (short)(((bSplittedByteInfo[1])<<8) | bSplittedByteInfo[0] & 0x00FF);
 				Key = new byte[sBytes];
 				bSplittedByteShuffledKey = new byte[sBytes * 2];
 				sShuffledOffsets = new short[sBytes];
 				
 				
-				rafKey.read(Key, 3, sBytes);
-				rafKey.read(bSplittedByteShuffledKey, (3+sBytes), (sBytes*2));
+				rafKey.seek(3);
+				rafKey.read(Key, 0, sBytes);
+				rafKey.seek(3+sBytes);
+				rafKey.read(bSplittedByteShuffledKey, 0, (sBytes*2));
 				
 				short sMergeToShortIndex = 0;
 				
 				for(int x=0;x<sBytes;x++)
 				{
-					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex+1]);
+					sShuffledOffsets[x] = (short)(((bSplittedByteShuffledKey[sMergeToShortIndex+1]) << 8) | 0x00FF & bSplittedByteShuffledKey[sMergeToShortIndex]);
 					sMergeToShortIndex += 2;
 				}
 				
-				int nDone = 0;
-				int nTotal = (int)TargetFile.length();
+				long nDone = 0;
+				long nTotal = TargetFile.length();
 				byte bChunk[] = new byte[(int)TargetFile.length()];
+				long nTargetBytesInCurrentPercent = nTotal / 100;
+				final long nOnePercent = nTotal / 100;
+				int nCurrentPercent = 0;
 				
+				rafTargetFile.seek(0);
 				rafTargetFile.read(bChunk, 0, (int)TargetFile.length());
 				
 				short sKeyIndex = 0;
@@ -496,22 +401,38 @@ public class Encode
 					
 					sKeyIndex++;
 					
-					if(this.jlProgress != null && sKeyIndex == sBytes)
+					if(this.jlProgress != null)
 					{
-						nDone += sBytes;
-						String sDone = Integer.toString(nDone);
-						String sTotal = Integer.toString(nTotal);
-						this.jlProgress.setText("Processing " + sDone
-								+ "/" + sTotal);
+						nDone++;
+						
+						if(nDone == nTargetBytesInCurrentPercent)
+						{
+							nCurrentPercent++;
+							this.jlProgress.setValue(nCurrentPercent);
+							nTargetBytesInCurrentPercent += nOnePercent;
+							
+							if(nTargetBytesInCurrentPercent >= nTotal)
+							{
+								nTargetBytesInCurrentPercent = nTotal;
+							}
+							else if(nTargetBytesInCurrentPercent < nTotal && nCurrentPercent == 99)
+							{
+								nTargetBytesInCurrentPercent = nTotal;
+							}
+						}
 					}
 				}
 				
+				rafTargetFile.seek(0);
 				rafTargetFile.write(bChunk);
+				bComplete = true;
 			}
 		}
 		
 		rafKey.close();
 		rafTargetFile.close();
+		
+		return bComplete;
 	}
 	
 	public GenerateKey CreateKey(short sBytes)
