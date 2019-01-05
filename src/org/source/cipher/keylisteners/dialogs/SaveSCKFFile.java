@@ -38,7 +38,7 @@ public class SaveSCKFFile implements ActionListener
 		if(nCapture == JFileChooser.APPROVE_OPTION)
 		{
 			File file = jFileChooser.getSelectedFile();
-			this.jtfSaveSCKFFile.setText(file.getAbsolutePath());
+			this.jtfSaveSCKFFile.setText(file.getAbsolutePath() + ".sckf");
 		}
 	}
 }

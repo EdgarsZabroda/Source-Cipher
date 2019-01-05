@@ -4,15 +4,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JDialog;
+import javax.swing.JTextField;
 
 import org.source.cipher.dialogs.KeyInfoDialog;
 
 public class KeyInfoListener implements ActionListener
 {
-	private String sFile;
+	private JTextField sFile;
 	private JDialog jdParent;
 	
-	public KeyInfoListener(String sFile, JDialog jdParent)
+	public KeyInfoListener(JTextField sFile, JDialog jdParent)
 	{
 		this.jdParent = jdParent;
 		this.sFile = sFile;
@@ -21,7 +22,8 @@ public class KeyInfoListener implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent ae)
 	{
-		KeyInfoDialog kid = new KeyInfoDialog(this.jdParent, true, this.sFile);
-		kid.setSize(384, 512);
+		KeyInfoDialog kid = new KeyInfoDialog(this.jdParent, false, this.sFile.getText());
+		kid.setSize(384, 320);
+		kid.GetInfo();
 	}
 }
