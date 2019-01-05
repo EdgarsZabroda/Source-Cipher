@@ -1,6 +1,7 @@
 package org.source.cipher.keyinfo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -26,7 +27,7 @@ public class KeyInfo
 		this.jtaSecondaryKey = jtaSecondaryKey;
 	}
 	
-	public void fetch() throws IOException
+	public void fetch() throws FileNotFoundException, IOException
 	{
 		File KeyFile = new File(this.sFile);
 		RandomAccessFile rafKeyFile = new RandomAccessFile(KeyFile, "r");
@@ -37,8 +38,10 @@ public class KeyInfo
 		byte bOffsetsInBytes[];
 		short sOffsets[];
 		
+		rafKeyFile.seek(0);
 		rafKeyFile.read(bSingle, 0, 1);
-		rafKeyFile.read(bSplitedBytes, 1, 2);
+		rafKeyFile.seek(1);
+		rafKeyFile.read(bSplitedBytes, 0, 2);
 		
 		sBytes = (short)(((bSplitedBytes[1])<<8)|(bSplitedBytes[0]&0x00FF));
 		
@@ -47,29 +50,26 @@ public class KeyInfo
 			this.jcbSingle.setSelected(true);
 		}
 		
-		String strBytes = Integer.toString((int)sBytes);
+		String strBytes = Integer.toString(sBytes);
 		
 		this.jtfKeyLenght.setText(strBytes);
 		
 		Key = new byte[sBytes];
 		
-		rafKeyFile.read(Key, 3, ((int)sBytes));
+		rafKeyFile.seek(3);
+		rafKeyFile.read(Key, 0, sBytes);
 		
-		StringBuilder sbKey = new StringBuilder();
+		String sKey = new String(Key);
 		
-		for(byte bByte : Key)
-		{
-			sbKey.append(bByte);
-		}
-		
-		this.jtaPrimaryKey.setText(sbKey.toString());
+		this.jtaPrimaryKey.setText(sKey);
 		
 		if(bSingle[0] == 0x00)
 		{
 			bOffsetsInBytes = new byte[sBytes*2];
 			sOffsets = new short[sBytes];
 			
-			rafKeyFile.read(bOffsetsInBytes, 2+sBytes, sBytes*2);
+			rafKeyFile.seek(3+sBytes);
+			rafKeyFile.read(bOffsetsInBytes, 0, sBytes*2);
 			
 			int nSplittedIndex = 0;
 			
@@ -86,14 +86,9 @@ public class KeyInfo
 				bSecondaryKey[x] = Key[sOffsets[x]];
 			}
 			
-			StringBuilder sbSKey = new StringBuilder();
+			String sSecondaryKey = new String(bSecondaryKey);
 			
-			for(byte Byte : bSecondaryKey)
-			{
-				sbSKey.append(Byte);
-			}
-			
-			this.jtaSecondaryKey.setText(sbSKey.toString());
+			this.jtaSecondaryKey.setText(sSecondaryKey);
 		}
 		
 		rafKeyFile.close();
