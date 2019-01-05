@@ -14,7 +14,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.source.cipher.checkboxstate.CheckBoxState;
 import org.source.cipher.keylisteners.dialogs.CancelKeyGeneration;
 import org.source.cipher.keylisteners.dialogs.GenerateEncryptionKey;
 import org.source.cipher.keylisteners.dialogs.SaveSCKFFile;
@@ -37,20 +36,17 @@ public class CreateSCKFFileDialog extends JDialog
 		JTextField jtfOutput = new JTextField(15);
 		JButton jbBrowse = new JButton("Save as");
 		JLabel jlBytes = new JLabel("Key length:");
-		String sBytes[] = { "8", "16", "32", "64", "128",
-				"256", "512" };
+		String sBytes[] = { "8", "16", "24", "32", "48", "64", "96", "128",
+				"192", "256", "384", "512" };
 		JComboBox jcbBytes = new JComboBox(sBytes);
 		JCheckBox jcbSingle = new JCheckBox("Generate single key");
 		JButton jbGenerate = new JButton("Generate");
 		JButton jbCancel = new JButton("Cancel");
 		
-		CheckBoxState chk = new CheckBoxState();
-		
-		jcbSingle.addItemListener(chk);
 		jbBrowse.addActionListener(new SaveSCKFFile(jtfOutput, this));
-		jbGenerate.addActionListener(new GenerateEncryptionKey(jtfOutput, jcbBytes, chk.bChecked));
+		jbGenerate.addActionListener(new GenerateEncryptionKey(this, jtfOutput, jcbBytes, jcbSingle));
 		jbCancel.addActionListener(new CancelKeyGeneration(this));
-		jcbSingle.addActionListener(new WarnSingleKey(this));
+		jcbSingle.addActionListener(new WarnSingleKey(this, jcbSingle));
 		
 		JPanel jPanel = new JPanel();
 		jPanel.setLayout(new GridBagLayout());
@@ -58,7 +54,7 @@ public class CreateSCKFFileDialog extends JDialog
 		
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.insets = new Insets(15, 15, 0, 0);
+		gbc.insets = new Insets(15, 15, 0, 15);
 		gbc.anchor = GridBagConstraints.EAST;
 		jPanel.add(jlOutput, gbc);
 		

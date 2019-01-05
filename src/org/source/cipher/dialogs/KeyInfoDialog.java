@@ -6,6 +6,7 @@ import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.JButton;
@@ -25,22 +26,30 @@ public class KeyInfoDialog extends JDialog
 {
 	private static final long serialVersionUID=0x8679FEDDL;
 	
-	public KeyInfoDialog(Dialog fParent, boolean bModule, String KeyFile)
+	private JCheckBox jcbYesNo;
+	private JTextField jtfKeyLength;
+	private JTextArea jtaPrimaryKey;
+	private JTextArea jtaSecondaryKey;
+	private String sKeyFile;
+	
+	public KeyInfoDialog(Dialog fParent, boolean bModule, String sKeyFile)
 	{
 		super(fParent, bModule);
+		
+		this.sKeyFile = sKeyFile;
 		
 		setTitle("KeyInformation");
 		setResizable(false);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		JLabel jlSingleKey = new JLabel("Single key:");
-		JCheckBox jcbYesNo = new JCheckBox();
+		this.jcbYesNo = new JCheckBox();
 		JLabel jlKeyLength = new JLabel("Key length:");
-		JTextField jtfKeyLength = new JTextField(10);
+		this.jtfKeyLength = new JTextField(10);
 		JLabel jlPrimaryKey = new JLabel("Primary key:");
-		JTextArea jtaPrimaryKey = new JTextArea(3, 5);
+		this.jtaPrimaryKey = new JTextArea(3, 15);
 		JLabel jlSecondaryKey = new JLabel("Secondary Key:");
-		JTextArea jtaSecondaryKey = new JTextArea(3, 5);
+		this.jtaSecondaryKey = new JTextArea(3, 15);
 		JScrollPane jscPrimaryKey = new JScrollPane(jtaPrimaryKey,
 				ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -49,14 +58,15 @@ public class KeyInfoDialog extends JDialog
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		JButton jbOK = new JButton("OK");
 		
+		jcbYesNo.setEnabled(false);
 		jtfKeyLength.setEditable(false);
-		jtfKeyLength.setBackground(Color.DARK_GRAY);
+		jtfKeyLength.setBackground(Color.GRAY);
 		jtaPrimaryKey.setLineWrap(true);
 		jtaPrimaryKey.setWrapStyleWord(true);
 		jtaPrimaryKey.setEditable(false);
-		jtaPrimaryKey.setBackground(Color.DARK_GRAY);
+		jtaPrimaryKey.setBackground(Color.GRAY);
 		jtaSecondaryKey.setEditable(false);
-		jtaSecondaryKey.setBackground(Color.DARK_GRAY);
+		jtaSecondaryKey.setBackground(Color.GRAY);
 		jtaSecondaryKey.setLineWrap(true);
 		jtaSecondaryKey.setWrapStyleWord(true);
 		jbOK.addActionListener(new CancelKeyGeneration(this));
@@ -70,7 +80,7 @@ public class KeyInfoDialog extends JDialog
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.anchor = GridBagConstraints.EAST;
-		gbc.insets = new Insets(15, 15, 0, 0);
+		gbc.insets = new Insets(15, 15, 0, 15);
 		jPanel.add(jlSingleKey, gbc);
 		
 		gbc.gridx = 1;
@@ -115,18 +125,25 @@ public class KeyInfoDialog extends JDialog
 		gbc.anchor = GridBagConstraints.CENTER;
 		jPanel.add(jbOK, gbc);
 		
+		getContentPane().add(jPanel, BorderLayout.NORTH);
+		pack();
+		setVisible(true);
+	}
+	
+	public void GetInfo()
+	{
 		try
 		{
-			KeyInfo keyInfo = new KeyInfo(KeyFile, jcbYesNo, jtfKeyLength, jtaPrimaryKey, jtaSecondaryKey);
+			KeyInfo keyInfo = new KeyInfo(this.sKeyFile, this.jcbYesNo, this.jtfKeyLength, this.jtaPrimaryKey, this.jtaSecondaryKey);
 			keyInfo.fetch();
+		}
+		catch(FileNotFoundException FNFE)
+		{
+			FNFE.printStackTrace();
 		}
 		catch(IOException IO)
 		{
 			IO.printStackTrace();
 		}
-		
-		getContentPane().add(jPanel, BorderLayout.NORTH);
-		pack();
-		setVisible(true);
 	}
 }

@@ -35,7 +35,7 @@ public class BeforeKeyInfo extends JDialog
 		JButton jbCancel = new JButton("Cancel");
 		
 		jbBrowse.addActionListener(new BrowseForKeyFile(jtfSCKFFile, this));
-		jbGetInfo.addActionListener(new KeyInfoListener(jtfSCKFFile.getText(), this));
+		jbGetInfo.addActionListener(new KeyInfoListener(jtfSCKFFile, this));
 		jbCancel.addActionListener(new CancelKeyGeneration(this));
 		
 		JPanel jPanel = new JPanel();
@@ -45,7 +45,7 @@ public class BeforeKeyInfo extends JDialog
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.anchor = GridBagConstraints.EAST;
-		gbc.insets = new Insets(15, 15, 0, 0);
+		gbc.insets = new Insets(15, 15, 0, 15);
 		jPanel.add(jlSCKFFile, gbc);
 		
 		gbc.gridx = 1;

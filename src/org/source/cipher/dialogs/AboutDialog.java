@@ -27,6 +27,7 @@ public class AboutDialog extends JDialog
 		
 		JLabel jlAbout1 = new JLabel("Source Cipher written in Java");
 		JLabel jlAbout2 = new JLabel("Version 5.1");
+		JLabel jlAbout3 = new JLabel("Developed by Edgars Zabroda at Source Projects");
 		JButton jbOK = new JButton("OK");
 		
 		jbOK.addActionListener(new CancelKeyGeneration(this));
@@ -37,7 +38,7 @@ public class AboutDialog extends JDialog
 		
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.insets = new Insets(15, 15, 0, 0);
+		gbc.insets = new Insets(15, 15, 0, 15);
 		gbc.anchor = GridBagConstraints.CENTER;
 		jPanel.add(jlAbout1, gbc);
 		
@@ -48,6 +49,11 @@ public class AboutDialog extends JDialog
 		
 		gbc.gridx = 0;
 		gbc.gridy = 2;
+		gbc.anchor = GridBagConstraints.CENTER;
+		jPanel.add(jlAbout3, gbc);
+		
+		gbc.gridx = 0;
+		gbc.gridy = 3;
 		gbc.anchor = GridBagConstraints.CENTER;
 		jPanel.add(jbOK, gbc);
 		
