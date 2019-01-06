@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.source.cipher.disablers.DisableGenerate;
 import org.source.cipher.keylisteners.dialogs.CancelKeyGeneration;
 import org.source.cipher.keylisteners.dialogs.GenerateEncryptionKey;
 import org.source.cipher.keylisteners.dialogs.SaveSCKFFile;
@@ -42,6 +43,10 @@ public class CreateSCKFFileDialog extends JDialog
 		JCheckBox jcbSingle = new JCheckBox("Generate single key");
 		JButton jbGenerate = new JButton("Generate");
 		JButton jbCancel = new JButton("Cancel");
+		
+		jbGenerate.setEnabled(false);
+		
+		jtfOutput.getDocument().addDocumentListener(new DisableGenerate(jtfOutput, jbGenerate));
 		
 		jbBrowse.addActionListener(new SaveSCKFFile(jtfOutput, this));
 		jbGenerate.addActionListener(new GenerateEncryptionKey(this, jtfOutput, jcbBytes, jcbSingle));
