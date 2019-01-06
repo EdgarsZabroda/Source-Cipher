@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.source.cipher.disablers.DisableGetInfo;
 import org.source.cipher.keylisteners.dialogs.BrowseForKeyFile;
 import org.source.cipher.keylisteners.dialogs.CancelKeyGeneration;
 import org.source.cipher.keylisteners.dialogs.KeyInfoListener;
@@ -33,6 +34,9 @@ public class BeforeKeyInfo extends JDialog
 		JButton jbBrowse = new JButton("Browse");
 		JButton jbGetInfo = new JButton("Get info");
 		JButton jbCancel = new JButton("Cancel");
+		
+		jbGetInfo.setEnabled(false);
+		jtfSCKFFile.getDocument().addDocumentListener(new DisableGetInfo(jtfSCKFFile, jbGetInfo));
 		
 		jbBrowse.addActionListener(new BrowseForKeyFile(jtfSCKFFile, this));
 		jbGetInfo.addActionListener(new KeyInfoListener(jtfSCKFFile, this));
